@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package app;
+
+// Message from UI to Server
+message ClientRequest {                 //client request to server
+  oneof request {
+    TextInput text_input = 1;           //component type name (nuts/discs,etc)
+    ImagePath image_path = 2;           //full path to test image
+    TrainCommand train_command = 3;     //command to start training the model
+  }
+}
+
+message TextInput {                     //component type name specification
+  string text = 1;                      //component name 
+}
+
+message ImagePath {                     //test image path specification
+  string path = 1;                      //absolute path on server computer
+}
+
+message TrainCommand {                  //training trigger
+  bool start = 1;                       //True=>training will begin
+}
+
+// Server response to UI
+message ServerResponse {
+  oneof response {
+    ImageData image_data = 1;           //current image being tested in bytes sent from server to client
+    StatusUpdate status = 2;            //result of defect detection
+    ServerMessage message = 3;          //general message from server to client
+  }
+}
+
+message ImageData {
+  bytes image_bytes = 1;                //Raw image data in bytes
+  string image_format = 2;              //format of image (e.g., "png", "jpg")
+}
+
+message StatusUpdate {
+  string status = 1;                   //"OK"=>good component, "NG"=>defective component
+}
+
+message ServerMessage {
+  string message = 1;                  //Message from server to client (e.g., "Training started", "Training completed")
+}
+
+// Service Definition
+service AppService {                  // Bidirectional streaming to handle all types of communication
+  rpc Communicate(stream ClientRequest) returns (stream ServerResponse);
+}
